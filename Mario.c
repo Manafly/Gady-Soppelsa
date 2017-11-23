@@ -8,6 +8,8 @@ int main(int argc, char* argv[]){
     /* Colorkey for the girl */
     int colorkey;
 
+    double timer = 0;
+
 
     /* initialize SDL */
     SDL_Init(SDL_INIT_VIDEO);
@@ -67,10 +69,9 @@ int main(int argc, char* argv[]){
     sprite_t *tab_grass;
     tab_grass = malloc(TAB_NUMBER * sizeof (sprite_t));
 
-    int ntab_girl = 0;
-    sprite_t *tab_girl;
-    tab_girl = malloc(1 * sizeof (sprite_t));
-    sprite_add(tab_girl, &ntab_girl, 1, garane, 32, 32, 50, 760, 0, 0, 1, 1, 8, 3, 1);
+    /* initilisation of the girl */
+    sprite_t girl;
+    sprite_init (&girl, 50, 760, 0, 0, 1, 1, 32, 32, garane, 3, 8, 1, false);
 
 
     /* read the file and set the tab */
@@ -87,17 +88,17 @@ int main(int argc, char* argv[]){
 
             /* if it is a 1 we draw a brick */
             if (tab[i][j] == '1'){
-                sprite_add(tab_brick, &ntab_brick, 1400, brick, 32, 32, 32*i, 32*j, 0, 0, 1, 1, 1, 0, 1);
+                sprite_add(tab_brick, &ntab_brick, 1400, brick, 32, 32, 32*i, 32*j, 0, 0, 1, 1, 1, 0, 1, false);
             }
 
             /* if it is a 2 we draw grass and earth */
             if (tab[i][j] == '2'){
-                sprite_add(tab_grass, &ntab_grass, 1400, grass, 32, 32, 32*i, 32*j, 0, 0, 1, 1, 2, 0, 1);
+                sprite_add(tab_grass, &ntab_grass, 1400, grass, 32, 32, 32*i, 32*j, 0, 0, 1, 1, 2, 0, 1, false);
             }
 
             /* if it is a 3 we draw only earth */
             if (tab[i][j] == '3'){
-                sprite_add(tab_grass, &ntab_grass, 1400, grass, 32, 32, 32*i, 32*j, 0, 0, 1, 1, 2, 1, 1);
+                sprite_add(tab_grass, &ntab_grass, 1400, grass, 32, 32, 32*i, 32*j, 0, 0, 1, 1, 2, 1, 1, false);
             }
           }
         }
@@ -110,11 +111,99 @@ int main(int argc, char* argv[]){
 
     while (!Exit){
 
-        update_events(key, &Exit);
-        alternative_HandleEvent(key, &Exit, tab_girl);
+        update_events(key, &Exit, &girl);
+        alternative_HandleEvent(key, &Exit, &girl);
+        sprite_move(&girl, 0);
+        //sprite_jump_down(&girl, &timer);
+
+        /* Collide with the screen */
+        if (girl.x < 0.0){
+            girl.x = SCREEN_WIDTH - girl.w;
+        }
+        if(girl.x > SCREEN_WIDTH - girl.w){
+            girl.x = 0.0;
+        }
+        if (girl.y < 0.0){
+            girl.y = 0.0;
+            //girl.isJumping = true;
+            sprite_jump_down(&girl, &timer);
+        }
+        if (girl.y > SCREEN_HEIGHT - girl.w){
+            girl.y = SCREEN_HEIGHT;
+            girl.isJumping = false;
+        }
 
 
-        //sprite_move(tab_girl);
+        bool collide1;
+        bool collide2;
+
+        for (int r = 0; r <= ntab_grass; r++){
+            collide1 = collision2(&girl, &tab_grass[r]);
+
+            if (collide1){
+                girl.y = tab_grass[r].y - girl.w;
+                girl.vy = 0;
+                girl.isJumping = false;
+            }
+        }
+
+        for (int s = 0; s <= ntab_brick; s++){
+            collide2 = collision2(&girl, &tab_brick[s]);
+
+            if (collide2 && (girl.current_frame == 2 || girl.current_frame == 3){
+
+
+            }
+
+        }
+
+
+
+        /* collision avec l'herbe (le sol) */
+        /*for (int r = 0; r <= ntab_grass; r++){
+            collide1 = collision2(&girl, &tab_grass[r]);
+
+            if (collide1){
+                girl.y = tab_grass[r].y - girl.w;
+                girl.isJumping = false;
+            }
+        }*/
+
+        /* collision avec les briques du jeu */
+      /*  for (int q = 0; q <= ntab_brick; q++){
+            collide2 = collision(&girl, &tab_brick[q]);
+
+            for (int i = tab_brick[q].x; i <= tab_brick[q].x + 32; i++){
+
+                //si le personnage entre en collision vers le bas de la brique, il tombe
+                if ((collide2) && ((tab_brick[q].y) + 32 == girl.y)){
+                    girl.isJumping = true;
+                    sprite_jump_down(&girl, &timer);
+                }
+
+                //si le personnage entre en collision par le haut de la brique, il reste dessus
+                if ((collide2) && (tab_brick[q].y == girl.y)){
+                    girl.y = tab_brick[q].y;
+                    girl.isJumping = false;
+                }
+            }
+
+            for (int a = tab_brick[q].y; a <= tab_brick[q].y + 32; a++){
+
+                //si le personnage entre en collision par la gauche de la brique, il tombe et n'avance plus
+                if ((collide2) && ((girl.x / 32)  == (tab_brick[q].x))){
+                    sprite_jump_down(&girl, &timer);
+                    girl.x = tab_brick[q].x - 32;
+                }
+
+                //si le personnage entre en collision par la droite de la brique, il tombe et ne recule plu
+                if ((collide2) && (girl.x == (tab_brick[q].x) + 32)){
+                    sprite_jump_down(&girl, &timer);
+                    girl.x = tab_brick[q].x + 33;
+                }
+            }
+        }*/
+
 
 
         SDL_Rect position;
@@ -130,13 +219,13 @@ int main(int argc, char* argv[]){
         for (int j = 0; j <= ntab_grass; j++){
             sprite_draw(&tab_grass[j], screen);
         }
-        for (int h = 0; h <= ntab_girl; h++){
-            sprite_draw(&tab_girl[0], screen);
-        }
+        sprite_draw(&girl, screen);
 
         /* update the world */
         SDL_UpdateRect(screen, 0, 0, 0, 0);
         SDL_BlitSurface(world, NULL, screen, &position);
+
+        timer += 0.001;
 
     }
 
