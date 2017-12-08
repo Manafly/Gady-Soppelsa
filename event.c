@@ -10,15 +10,13 @@ void alternative_HandleEvent(char *key, int *Exit, sprite_t *sprite){
 
         if (key[tabkey[i][2]]){ // LEFT
             sprite_turn_left(sprite);
-            sprite_move_left(sprite);
+            sprite_boost(sprite, 10);
         }
 
         if (key[tabkey[i][3]]){ // RIGHT
             sprite_turn_right(sprite);
-            sprite_move_right(sprite);
-
+            sprite_boost(sprite, -10);
         }
-
 
         if (key[tabkey[i][4]]){ // SPACE
             sprite_jump(sprite);
@@ -31,7 +29,7 @@ void alternative_HandleEvent(char *key, int *Exit, sprite_t *sprite){
 }
 
 
-void update_events(char* keys, int *Exit){
+void update_events(char* keys, int *Exit, sprite_t *sprite){
 
       SDL_Event event;
       while(SDL_PollEvent(&event)){
